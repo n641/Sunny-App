@@ -1,39 +1,115 @@
 import { StyleSheet, Text, View, ImageBackground, Button, TouchableOpacity } from 'react-native'
-import React from 'react'
+import React ,{useEffect}from 'react'
 import { Ionicons } from '@expo/vector-icons';
+import * as Notifications from 'expo-notifications';
 
-const HomeScreen = ({navigation}) => {
+
+Notifications.setNotificationHandler({
+    handleNotification:async ()=>{
+      return{
+        shouldShowAlert:true
+      }
+    }
+  })
+
+  
+const HomeScreen = ({ navigation }) => {
+
+
+    useEffect(()=>{
+        Notifications.getPermissionsAsync()
+        .then((statusObj)=>{
+          if(statusObj.status !== 'granted'){
+            return Notifications.requestPermissionsAsync()
+          }
+          return statusObj
+        }).then((statusObj)=>{
+          if(statusObj.status !== 'granted'){
+            return;
+          }
+        })
+      },[])
+      
+      useEffect(()=>{
+       const backgroundSubscribtion = Notifications.addNotificationResponseReceivedListener(  //control notification while the app is not               runing   
+       responce => {
+        // navigation.navigate(responce.date);
+       } 
+       )
+        const foregroundsubscriber = Notifications.addNotificationReceivedListener( //control notification while the app runing 
+          (Notifications)=>{
+            
+            //we can get notification data and navigate user it specific screen
+          }
+        );
+         return()=>{
+          foregroundsubscriber.remove();
+          backgroundSubscribtion.remove();
+         } 
+      },[])
+    
+      const triggerNotificationHandler=()=>{
+        Notifications.scheduleNotificationAsync({
+          content:{
+            title:"There is an explosion today in the sun",
+            body:" let me tell more about this explosion",
+            data: { data: 'FlucExpectation' },
+          },
+         trigger:{
+          seconds:2
+         }
+         
+    
+        })
+      }
+
     return (
         <View style={styles.containerImage}>
             <ImageBackground source={require('../assets/Milky-Way-From-Canyonlands-National-Park-scaled.jpg')}
                 resizeMode="cover" style={styles.image}>
 
-                <TouchableOpacity onPress={()=>{
+                <TouchableOpacity onPress={() => {
                     navigation.navigate('GameScreen')
                 }}>
                     <View style={styles.container}>
                         <Text style={styles.text}>PLay Now</Text>
                     </View>
                 </TouchableOpacity>
-                <TouchableOpacity>
+
+                <TouchableOpacity onpress={() => {
+                    navigation.navigate('WeatherScreen')
+                }}>
                     <View style={styles.container}>
-                        <Text style={styles.text}>space Weather</Text>
+                        <Text style={styles.text} onPress={()=>{
+                             navigation.navigate('WeatherScreen')
+                        }}>space Weather</Text>
+                    </View>
+                </TouchableOpacity>
+
+                <TouchableOpacity onpress={() => {
+                    navigation.navigate('FlucExpectation')
+                }}>
+                    <View style={styles.container}>
+                        <Text style={styles.text} onPress={()=>{
+                             navigation.navigate('FlucExpectation')
+                        }}>Flux Expectaion</Text>
                     </View>
                 </TouchableOpacity>
 
                 <View style={styles.containerSun}>
                     <View style={{ flexDirection: 'row', width: 250, justifyContent: 'space-around' }}>
-                        <Button title='see Sun' color={'red'} style={{ borderRadius: 10 }} onpress={()=>{
+                        <Button title='see Sun' color={'red'} style={{ borderRadius: 10 }} onpress={() => {
 
                         }} />
-                        <View style={{ borderColor: 'black', borderWidth: 1 , borderRadius:10}}>
-                            <View style={{flexDirection:'row', alignItems:'center', margin:4}}>
-                                <Ionicons name="calendar" style={{top:2}}/>
+                        <View style={{ borderColor: 'black', borderWidth: 1, borderRadius: 10 }}>
+                            <View style={{ flexDirection: 'row', alignItems: 'center', margin: 4 }}>
                                 <Text style={{ textAlign: 'center', top: 2, margin: 3 }}>10/02/2022</Text>
+                                <Ionicons name="calendar" style={{ top: 2 }} size={23} />
                             </View>
                         </View>
                     </View>
                 </View>
+                <Text style={{color:"black"}} onPress={triggerNotificationHandler}>click</Text>
 
             </ImageBackground>
         </View>
@@ -74,7 +150,7 @@ const styles = StyleSheet.create({
     },
     text: {
         color: "white",
-        fontSize: 29,
+        fontSize: 25,
         lineHeight: 84,
         fontWeight: "bold",
         textAlign: "center",
